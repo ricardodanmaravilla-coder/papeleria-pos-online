@@ -57,11 +57,16 @@ function closeRegistration(){
  $("showRegister").classList.remove("hidden");
  $("registerPassword").value="";$("registerPassword2").value="";
 }
+let signupInProgress=false;
 $("registerForm").onsubmit=async ev=>{
  ev.preventDefault();$("loginError").textContent="";$("registerStatus").textContent="";
  const p=$("registerPassword").value,confirm=$("registerPassword2").value;
  if(p.length<12){$("loginError").textContent="Utiliza al menos 12 caracteres.";return}
  if(p!==confirm){$("loginError").textContent="Las contraseñas no coinciden.";return}
+ if(signupInProgress)return;
+ signupInProgress=true;
+ const submitButton=$("registerForm").querySelector('button[type="submit"]');
+ submitButton.disabled=true;
  try{
    // No reutilizamos ni compartimos la sesión del sistema de fletes.
    logout();
@@ -72,7 +77,16 @@ $("registerForm").onsubmit=async ev=>{
    $("email").value="ricardodan.maravilla+papeleria@gmail.com";
    closeRegistration();
    if(r.access_token){setSession(r);await start()}
- }catch(e){$("loginError").textContent=/email_address_invalid|email address.*invalid/i.test(e.message)?"Supabase no acepta este correo electrónico. Necesitamos configurar otro correo real para el administrador.":e.message}
+ }catch(e){
+   const detail=String(e.message||"");
+   $("loginError").textContent=/email.rate.limit.exceeded|over_email_send_rate_limit|rate limit/i.test(detail)
+      ?"Supabase alcanzó el límite de correos de confirmación del proyecto (normalmente 2 por hora). No vuelvas a pulsar Crear cuenta repetidamente: intenta nuevamente cuando se libere el límite."
+      :/email_address_invalid|email address.*invalid/i.test(detail)
+        ?"Supabase no acepta este correo electrónico.":"No se pudo registrar: "+detail;
+ } finally{
+   signupInProgress=false;
+   submitButton.disabled=false;
+ }
 };
 $("loginForm").onsubmit=async ev=>{ev.preventDefault();$("loginError").textContent="";try{const j=await request("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})},false);setSession(j);await start()}catch(e){$("loginError").textContent=e.message}};
 async function start(){const me=await request("/auth/v1/user");currentUser=me;let m=await request("/rest/v1/pos_members?select=role&user_id=eq."+encodeURIComponent(me.id));if(!m.length)throw Error("Esta cuenta no está autorizada para Papelería POS. Utiliza la cuenta independiente de ricardodan.maravilla+papeleria@gmail.com.");$("login").classList.add("hidden");$("app").classList.remove("hidden");$("userLabel").textContent=me.email+" · "+m[0].role;await loadAll()}

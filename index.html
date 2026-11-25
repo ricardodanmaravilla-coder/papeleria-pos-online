@@ -8,7 +8,20 @@ input,select{border:1px solid #cbd2de;border-radius:8px;padding:11px;background:
 @media(max-width:900px){.split{grid-template-columns:1fr}.app{grid-template-columns:1fr}.side{padding:10px}.side h1{margin:0}.side nav{display:flex;flex-wrap:wrap;gap:4px}.side button{width:auto;margin:0;padding:9px}.main{padding:12px}.fieldrow{grid-template-columns:1fr}.entry{grid-template-columns:1fr 70px auto}}
 </style></head>
 <body>
-<div id="login" class="panel login"><h1>✎ Papelería POS Online</h1><p class="muted">Acceso privado. Utiliza tu correo y contraseña del sistema Fletes MA.</p><form id="loginForm"><label>Correo electrónico<input id="email" type="email" autocomplete="username" required></label><label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit" style="width:100%">Entrar</button></form><p id="loginError" class="danger"></p></div>
+<div id="login" class="panel login">
+<h1>✎ Papelería POS Online</h1>
+<p class="muted">Acceso privado exclusivo para Papelería POS. Tu cuenta es independiente del sistema de fletes.</p>
+<form id="loginForm"><label>Correo electrónico<input id="email" type="email" autocomplete="username" required></label><label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit" style="width:100%">Entrar</button></form>
+<button id="showRegister" type="button" style="margin-top:12px;width:100%" onclick="openRegistration()">Crear mi contraseña de Papelería POS</button>
+<form id="registerForm" class="hidden" style="margin-top:15px">
+<p class="muted">Registro inicial del administrador autorizado. Usa un correo al que tengas acceso: necesitarás confirmar el mensaje que envíe Supabase.</p>
+<label>Correo de administrador<input id="registerEmail" type="email" value="ricardomaravilla@email.com" readonly required></label>
+<label>Nueva contraseña<input id="registerPassword" type="password" minlength="12" autocomplete="new-password" required></label>
+<label>Confirmar contraseña<input id="registerPassword2" type="password" minlength="12" autocomplete="new-password" required></label>
+<button class="primary" type="submit" style="width:100%">Crear cuenta de Papelería</button>
+<button type="button" style="margin-top:7px;width:100%" onclick="closeRegistration()">Volver a iniciar sesión</button>
+</form>
+<p id="loginError" role="alert" class="danger"></p><p id="registerStatus" class="ok" role="status"></p></div>
 <div id="app" class="app hidden"><aside class="side"><h1>✎ Papelería POS</h1><nav id="nav"><button data-tab="sale" class="active">🛒 Nueva venta</button><button data-tab="products">📦 Productos</button><button data-tab="customers">👥 Clientes y lealtad</button><button data-tab="history">🧾 Ventas</button><button data-tab="summary">📊 Resumen</button></nav><button onclick="logout()">Salir</button></aside>
 <main class="main"><div class="top"><div><h1 id="title">Nueva venta</h1><span id="userLabel" class="muted"></span></div><button onclick="loadAll()">↻ Actualizar</button></div><div id="status" role="status"></div>
 <section id="sale" class="view active">
@@ -35,8 +48,34 @@ async function request(path,opts={},retry=true){const h={"apikey":KEY,"Content-T
 async function refreshAuth(){const j=await request("/auth/v1/token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:refresh})},false);setSession(j)}
 function setSession(j){access=j.access_token;refresh=j.refresh_token;localStorage.setItem("pos_access",access);localStorage.setItem("pos_refresh",refresh)}
 function logout(){localStorage.removeItem("pos_access");localStorage.removeItem("pos_refresh");access=refresh="";$("app").classList.add("hidden");$("login").classList.remove("hidden");$("password").value="";currentUser=null}
+function openRegistration(){
+ $("loginForm").classList.add("hidden");$("showRegister").classList.add("hidden");
+ $("registerForm").classList.remove("hidden");$("loginError").textContent="";
+}
+function closeRegistration(){
+ $("registerForm").classList.add("hidden");$("loginForm").classList.remove("hidden");
+ $("showRegister").classList.remove("hidden");
+ $("registerPassword").value="";$("registerPassword2").value="";
+}
+$("registerForm").onsubmit=async ev=>{
+ ev.preventDefault();$("loginError").textContent="";$("registerStatus").textContent="";
+ const p=$("registerPassword").value,confirm=$("registerPassword2").value;
+ if(p.length<12){$("loginError").textContent="Utiliza al menos 12 caracteres.";return}
+ if(p!==confirm){$("loginError").textContent="Las contraseñas no coinciden.";return}
+ try{
+   // No reutilizamos ni compartimos la sesión del sistema de fletes.
+   logout();
+   const r=await request("/auth/v1/signup",{method:"POST",body:JSON.stringify({
+     email:"ricardomaravilla@email.com",password:p
+   })},false);
+   $("registerStatus").textContent="Registro solicitado. Revisa la bandeja de entrada y correo no deseado de ricardomaravilla@email.com para confirmar la cuenta. Después regresa a esta página e inicia sesión con tu nueva contraseña.";
+   $("email").value="ricardomaravilla@email.com";
+   closeRegistration();
+   if(r.access_token){setSession(r);await start()}
+ }catch(e){$("loginError").textContent=e.message}
+};
 $("loginForm").onsubmit=async ev=>{ev.preventDefault();$("loginError").textContent="";try{const j=await request("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})},false);setSession(j);await start()}catch(e){$("loginError").textContent=e.message}};
-async function start(){const me=await request("/auth/v1/user");currentUser=me;let m=await request("/rest/v1/pos_members?select=role&user_id=eq."+encodeURIComponent(me.id));if(!m.length)throw Error("Esta cuenta no tiene acceso a Papelería POS");$("login").classList.add("hidden");$("app").classList.remove("hidden");$("userLabel").textContent=me.email+" · "+m[0].role;await loadAll()}
+async function start(){const me=await request("/auth/v1/user");currentUser=me;let m=await request("/rest/v1/pos_members?select=role&user_id=eq."+encodeURIComponent(me.id));if(!m.length)throw Error("Esta cuenta no está autorizada para Papelería POS. Utiliza la cuenta independiente de ricardomaravilla@email.com.");$("login").classList.add("hidden");$("app").classList.remove("hidden");$("userLabel").textContent=me.email+" · "+m[0].role;await loadAll()}
 async function loadAll(){try{status("Actualizando datos…");let r=await Promise.all([
  request("/rest/v1/pos_products?select=*&order=name.asc&limit=2000"),
  request("/rest/v1/pos_customers?select=*&active=eq.true&order=name.asc&limit=2000"),

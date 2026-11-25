@@ -14,8 +14,8 @@ input,select{border:1px solid #cbd2de;border-radius:8px;padding:11px;background:
 <form id="loginForm"><label>Correo electrónico<input id="email" type="email" autocomplete="username" required></label><label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label><button class="primary" type="submit" style="width:100%">Entrar</button></form>
 <button id="showRegister" type="button" style="margin-top:12px;width:100%" onclick="openRegistration()">Crear mi contraseña de Papelería POS</button>
 <form id="registerForm" class="hidden" style="margin-top:15px">
-<p class="muted">Registro inicial del administrador autorizado. Usa un correo al que tengas acceso: necesitarás confirmar el mensaje que envíe Supabase.</p>
-<label>Correo de administrador<input id="registerEmail" type="email" value="ricardomaravilla@email.com" readonly required></label>
+<p class="muted">Esta dirección con +papeleria es un alias de tu Gmail habitual: los mensajes llegan al mismo buzón, pero la contraseña será diferente de la de Fletes MA. Tendrás que confirmar el correo.</p>
+<label>Correo de administrador<input id="registerEmail" type="email" value="ricardodan.maravilla+papeleria@gmail.com" readonly required></label>
 <label>Nueva contraseña<input id="registerPassword" type="password" minlength="12" autocomplete="new-password" required></label>
 <label>Confirmar contraseña<input id="registerPassword2" type="password" minlength="12" autocomplete="new-password" required></label>
 <button class="primary" type="submit" style="width:100%">Crear cuenta de Papelería</button>
@@ -65,17 +65,17 @@ $("registerForm").onsubmit=async ev=>{
  try{
    // No reutilizamos ni compartimos la sesión del sistema de fletes.
    logout();
-   const r=await request("/auth/v1/signup",{method:"POST",body:JSON.stringify({
-     email:"ricardomaravilla@email.com",password:p
+   const r=await request("/auth/v1/signup?redirect_to="+encodeURIComponent("https://ricardodanmaravilla-coder.github.io/papeleria-pos-online/"),{method:"POST",body:JSON.stringify({
+     email:"ricardodan.maravilla+papeleria@gmail.com",password:p
    })},false);
-   $("registerStatus").textContent="Registro solicitado. Revisa la bandeja de entrada y correo no deseado de ricardomaravilla@email.com para confirmar la cuenta. Después regresa a esta página e inicia sesión con tu nueva contraseña.";
-   $("email").value="ricardomaravilla@email.com";
+   $("registerStatus").textContent="Registro solicitado. Revisa la bandeja de entrada y correo no deseado de ricardodan.maravilla+papeleria@gmail.com para confirmar la cuenta. Después regresa a esta página e inicia sesión con tu nueva contraseña.";
+   $("email").value="ricardodan.maravilla+papeleria@gmail.com";
    closeRegistration();
    if(r.access_token){setSession(r);await start()}
  }catch(e){$("loginError").textContent=/email_address_invalid|email address.*invalid/i.test(e.message)?"Supabase no acepta este correo electrónico. Necesitamos configurar otro correo real para el administrador.":e.message}
 };
 $("loginForm").onsubmit=async ev=>{ev.preventDefault();$("loginError").textContent="";try{const j=await request("/auth/v1/token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("email").value.trim(),password:$("password").value})},false);setSession(j);await start()}catch(e){$("loginError").textContent=e.message}};
-async function start(){const me=await request("/auth/v1/user");currentUser=me;let m=await request("/rest/v1/pos_members?select=role&user_id=eq."+encodeURIComponent(me.id));if(!m.length)throw Error("Esta cuenta no está autorizada para Papelería POS. Utiliza la cuenta independiente de ricardomaravilla@email.com.");$("login").classList.add("hidden");$("app").classList.remove("hidden");$("userLabel").textContent=me.email+" · "+m[0].role;await loadAll()}
+async function start(){const me=await request("/auth/v1/user");currentUser=me;let m=await request("/rest/v1/pos_members?select=role&user_id=eq."+encodeURIComponent(me.id));if(!m.length)throw Error("Esta cuenta no está autorizada para Papelería POS. Utiliza la cuenta independiente de ricardodan.maravilla+papeleria@gmail.com.");$("login").classList.add("hidden");$("app").classList.remove("hidden");$("userLabel").textContent=me.email+" · "+m[0].role;await loadAll()}
 async function loadAll(){try{status("Actualizando datos…");let r=await Promise.all([
  request("/rest/v1/pos_products?select=*&order=name.asc&limit=2000"),
  request("/rest/v1/pos_customers?select=*&active=eq.true&order=name.asc&limit=2000"),

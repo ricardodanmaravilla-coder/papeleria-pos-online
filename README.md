@@ -1,18 +1,7 @@
-# Papelería POS Online
+# Papelería POS Online — retirado
 
-Interfaz pública (código fuente) del sistema de punto de venta. **Los datos y el inicio de sesión son privados y están en Supabase**, no en este repositorio.
+La aplicación web se retiró por decisión del propietario. No hay interfaz, usuarios ni datos activos de Papelería POS Online en este proyecto.
 
-## Acceso
+El sistema privado **Fletes MA** y el proyecto de escritorio **Papelería POS para Windows** se conservan por separado y no fueron alterados.
 
-URL del sitio cuando se habilite GitHub Pages:
-https://ricardodanmaravilla-coder.github.io/papeleria-pos-online/
-
-Se inicia sesión con el administrador exclusivo de Papelería POS, `ricardodan.maravilla+papeleria@gmail.com`. El alias `+papeleria` recibe correos en `ricardodan.maravilla@gmail.com`, pero se registra como usuario diferente en Supabase y admite una contraseña independiente. La cuenta se da de alta desde el botón «Crear mi contraseña de Papelería POS» y, cuando el correo queda confirmado, se le otorga el rol de administrador. Las credenciales de Fletes MA ya no tienen acceso a POS. El proyecto reutiliza la instancia de Fletes MA pero mantiene tablas independientes prefijadas con `pos_`. El archivo `index.html` usa solo la **clave publicable** de Supabase, que no otorga acceso por sí sola: los datos están protegidos por inicio de sesión y RLS.
-
-## Publicación por rama (sin GitHub Actions de compilación)
-
-En **Settings → Pages** selecciona **Deploy from a branch**, rama **main**, directorio **/(root)** y pulsa **Save**. La publicación utiliza GitHub Pages y no requiere compilar un EXE. GitHub puede contabilizar el proceso Pages como un workflow de despliegue, por lo que no prometemos que no aparezca una ejecución en Actions.
-
-## Alcance actual
-
-Ventas, cantidades, precios puntuales de venta, productos, existencias, clientes, cupones y reportes preliminares. La impresión de tickets/cupones usa el navegador. La base web comienza vacía y no importa automáticamente la base de datos local SQLite de Windows. Se requieren pruebas en el dispositivo e impresora reales antes de operación comercial.
+Este repositorio público puede eliminarse completamente desde **Settings → General → Danger Zone → Delete this repository**. GitHub Pages puede desactivarse desde **Settings → Pages**.

@@ -7,7 +7,7 @@ Interfaz pública (código fuente) del sistema de punto de venta. **Los datos y 
 URL del sitio cuando se habilite GitHub Pages:
 https://ricardodanmaravilla-coder.github.io/papeleria-pos-online/
 
-Se inicia sesión con la cuenta autorizada en Supabase. El proyecto reutiliza la instancia de Fletes MA pero mantiene tablas independientes prefijadas con `pos_`. El archivo `index.html` usa solo la **clave publicable** de Supabase, que no otorga acceso por sí sola: los datos están protegidos por inicio de sesión y RLS.
+Se inicia sesión con el administrador exclusivo de Papelería POS, `ricardomaravilla@email.com`. La cuenta se da de alta desde el botón «Crear mi contraseña de Papelería POS» y, cuando el correo queda confirmado, se le otorga el rol de administrador. Las credenciales de Fletes MA ya no tienen acceso a POS. El proyecto reutiliza la instancia de Fletes MA pero mantiene tablas independientes prefijadas con `pos_`. El archivo `index.html` usa solo la **clave publicable** de Supabase, que no otorga acceso por sí sola: los datos están protegidos por inicio de sesión y RLS.
 
 ## Publicación por rama (sin GitHub Actions de compilación)
 
